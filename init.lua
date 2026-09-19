@@ -8,7 +8,14 @@ Library.Modules={
 }
 
 function Library:GetModule(Name)
- return self.Modules[Name]
+ local Path=self.Modules[Name]
+ if not Path then
+  return nil
+ end
+
+ local BaseURL="https://raw.githubusercontent.com/juajuajuag-lang/lua-library/main/"
+ local Source=game:HttpGet(BaseURL..Path)
+ return loadstring(Source)()
 end
 
 return Library
