@@ -3,13 +3,9 @@ local Loader={}
 Loader.Name="LibraryLoader"
 Loader.Version="1.0.0"
 
-function Loader:Register(Name,Module)
- self[Name]=Module
- return Module
-end
-
-function Loader:Get(Name)
- return self[Name]
+function Loader:Load(URL)
+ local Source=game:HttpGet(URL)
+ return loadstring(Source)()
 end
 
 return Loader
