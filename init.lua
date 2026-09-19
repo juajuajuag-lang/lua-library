@@ -4,7 +4,8 @@ Library.Name="LuaLibrary"
 Library.Version="1.0.0"
 
 Library.Modules={
- Dashboard="Modules/Dashboard.lua"
+ Dashboard="Modules/Dashboard.lua",
+ Visual="Modules/Visual.lua"
 }
 
 function Library:GetModule(Name)
