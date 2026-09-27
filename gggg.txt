@@ -1,0 +1,3499 @@
+--services
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local ContextActionService = game:GetService("ContextActionService")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+
+--settings
+
+local Settings = {
+    Visual = {
+        ESPFillTransparency = 0.95,
+        ESPOutlineTransparency = 0.30,
+        ESPTextSize = 12,
+
+        EnablePlayerESP = false,
+        PlayerESPTypes = {
+            Survivor = false,
+            Killer = false,
+            Spectator = false
+        },
+
+        SurvivorItemsESP = false,
+        PlayerNametags = false,
+        PlayerDistanceESP = false,
+        SurvivorKillerWarning = false,
+
+        SurvivorColor = Color3.fromRGB(80, 170, 255),
+        KillerColor = Color3.fromRGB(255, 80, 80),
+        SpectatorColor = Color3.fromRGB(180, 180, 190),
+
+        EnableWorldESP = false,
+        WorldObjects = {
+            Generators = false,
+            Hooks = false,
+            Gates = false,
+            Windows = false,
+            Pallets = false,
+            SCPZombie = false
+        },
+
+        WorldNametags = false,
+        WorldDistanceESP = false,
+
+        GeneratorColor = Color3.fromRGB(255, 210, 70),
+        HookColor = Color3.fromRGB(255, 100, 100),
+        GateColor = Color3.fromRGB(100, 220, 255),
+        WindowColor = Color3.fromRGB(150, 220, 255),
+        PalletColor = Color3.fromRGB(190, 140, 90),
+        SCPZombieColor = Color3.fromRGB(180, 80, 255)
+    },
+
+    Main = {
+        AutoSkillcheck = false,
+        HideSkillcheckUI = false,
+        BoostGenBypass = false,
+        SkillcheckMode = "Normal"
+    },
+
+    Parry = {
+        AutoParry = false,
+        AutoParryAgresif = false,
+        ParryDistanceTrigger = 10,
+        ShowParryRangeCircle = false
+    },
+
+    Aim = {
+        EnableAimbot = false,
+        UseRMB = false,
+        ShowFOVCircle = false,
+        FOVSize = 100,
+        Smoothness = 0.5,
+        VisibilityCheck = false,
+        Prediction = false,
+
+        EnableCrosshair = false,
+        CrosshairColor = Color3.fromRGB(255, 255, 255),
+        CrosshairStyle = "Dot",
+        CrosshairSize = 5,
+        CrosshairThickness = 2,
+        CrosshairGap = 4,
+        PositionXOffset = 0,
+        PositionYOffset = 0,
+
+        SilentAimToF = false,
+        ToFLaser = false,
+        ToFWallCheck = false,
+        ToFBlockWhenKnocked = false,
+        ToFTargetMode = "Killer",
+
+        SilentAimFlashlight = false,
+        FlashlightLaser = false,
+        FlashlightTargetPart = "Head"
+    }
+}
+
+--screengui
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ProtoMenu"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.DisplayOrder = 1000000
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+ScreenGui.Parent = game:GetService("CoreGui")
+
+--cinematic-protection
+
+local function ProtectMenu()
+    ScreenGui.DisplayOrder = 1000000
+    ScreenGui.Enabled = true
+    ScreenGui.IgnoreGuiInset = true
+end
+
+ProtectMenu()
+
+RunService.RenderStepped:Connect(function()
+    ProtectMenu()
+end)
+
+--camera-lock
+
+local CameraBlockAction = "ProtoMenuCameraBlock"
+
+local function BlockCamera(_, State)
+    if State == Enum.UserInputState.Begin
+    or State == Enum.UserInputState.Change then
+        return Enum.ContextActionResult.Sink
+    end
+
+    return Enum.ContextActionResult.Pass
+end
+
+--main-frame
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.fromOffset(720, 470)
+MainFrame.Position = UDim2.new(0.5, -360, 0.5, -235)
+MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 23)
+MainFrame.BorderSizePixel = 0
+MainFrame.ClipsDescendants = false
+MainFrame.Parent = ScreenGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 10)
+MainCorner.Parent = MainFrame
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Color3.fromRGB(55, 55, 65)
+MainStroke.Thickness = 1
+MainStroke.Parent = MainFrame
+
+--topbar
+
+local TopBar = Instance.new("Frame")
+TopBar.Name = "TopBar"
+TopBar.Size = UDim2.new(1, 0, 0, 48)
+TopBar.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
+TopBar.BorderSizePixel = 0
+TopBar.Parent = MainFrame
+
+local TopCorner = Instance.new("UICorner")
+TopCorner.CornerRadius = UDim.new(0, 10)
+TopCorner.Parent = TopBar
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, -120, 1, 0)
+Title.Position = UDim2.fromOffset(16, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "ProtoRun"
+Title.TextColor3 = Color3.fromRGB(235, 235, 240)
+Title.TextSize = 15
+Title.Font = Enum.Font.GothamBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = TopBar
+
+--minimize
+
+local MinimizeButton = Instance.new("TextButton")
+MinimizeButton.Name = "Minimize"
+MinimizeButton.Size = UDim2.fromOffset(38, 32)
+MinimizeButton.Position = UDim2.new(1, -82, 0.5, -16)
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(38, 38, 46)
+MinimizeButton.BorderSizePixel = 0
+MinimizeButton.Text = "—"
+MinimizeButton.TextColor3 = Color3.fromRGB(220, 220, 225)
+MinimizeButton.TextSize = 18
+MinimizeButton.Font = Enum.Font.GothamBold
+MinimizeButton.Parent = TopBar
+
+local MinCorner = Instance.new("UICorner")
+MinCorner.CornerRadius = UDim.new(0, 6)
+MinCorner.Parent = MinimizeButton
+
+--close
+
+local CloseButton = Instance.new("TextButton")
+CloseButton.Name = "Close"
+CloseButton.Size = UDim2.fromOffset(38, 32)
+CloseButton.Position = UDim2.new(1, -40, 0.5, -16)
+CloseButton.BackgroundColor3 = Color3.fromRGB(38, 38, 46)
+CloseButton.BorderSizePixel = 0
+CloseButton.Text = "×"
+CloseButton.TextColor3 = Color3.fromRGB(220, 220, 225)
+CloseButton.TextSize = 18
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.Parent = TopBar
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 6)
+CloseCorner.Parent = CloseButton
+
+--sidebar
+
+local Sidebar = Instance.new("Frame")
+Sidebar.Name = "Sidebar"
+Sidebar.Size = UDim2.new(0, 145, 1, -58)
+Sidebar.Position = UDim2.fromOffset(8, 52)
+Sidebar.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+Sidebar.BorderSizePixel = 0
+Sidebar.Parent = MainFrame
+
+local SidebarCorner = Instance.new("UICorner")
+SidebarCorner.CornerRadius = UDim.new(0, 8)
+SidebarCorner.Parent = Sidebar
+
+local SidebarLayout = Instance.new("UIListLayout")
+SidebarLayout.Padding = UDim.new(0, 6)
+SidebarLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+SidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
+SidebarLayout.Parent = Sidebar
+
+local SidebarPadding = Instance.new("UIPadding")
+SidebarPadding.PaddingTop = UDim.new(0, 10)
+SidebarPadding.PaddingBottom = UDim.new(0, 10)
+SidebarPadding.Parent = Sidebar
+
+--content
+
+local Content = Instance.new("Frame")
+Content.Name = "Content"
+Content.Size = UDim2.new(1, -165, 1, -58)
+Content.Position = UDim2.fromOffset(157, 52)
+Content.BackgroundColor3 = Color3.fromRGB(21, 21, 26)
+Content.BorderSizePixel = 0
+Content.ClipsDescendants = true
+Content.Parent = MainFrame
+
+local ContentCorner = Instance.new("UICorner")
+ContentCorner.CornerRadius = UDim.new(0, 8)
+ContentCorner.Parent = Content
+
+--pages
+
+local function CreatePage(Name)
+    local Page = Instance.new("ScrollingFrame")
+    Page.Name = Name
+    Page.Size = UDim2.fromScale(1, 1)
+    Page.BackgroundTransparency = 1
+    Page.BorderSizePixel = 0
+    Page.ScrollBarThickness = 3
+    Page.ScrollBarImageColor3 = Color3.fromRGB(80, 80, 90)
+    Page.CanvasSize = UDim2.fromOffset(0, 0)
+    Page.Visible = false
+    Page.Parent = Content
+
+    local Padding = Instance.new("UIPadding")
+    Padding.PaddingTop = UDim.new(0, 8)
+    Padding.PaddingBottom = UDim.new(0, 8)
+    Padding.PaddingLeft = UDim.new(0, 8)
+    Padding.PaddingRight = UDim.new(0, 8)
+    Padding.Parent = Page
+
+    local Layout = Instance.new("UIListLayout")
+    Layout.Padding = UDim.new(0, 6)
+    Layout.SortOrder = Enum.SortOrder.LayoutOrder
+    Layout.Parent = Page
+
+    Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        Page.CanvasSize = UDim2.fromOffset(
+            0,
+            Layout.AbsoluteContentSize.Y + 16
+        )
+    end)
+
+    return Page
+end
+
+local VisualPage = CreatePage("VisualPage")
+local MainPage = CreatePage("MainPage")
+local ParryPage = CreatePage("ParryPage")
+local AimPage = CreatePage("AimPage")
+
+--tabs
+
+local Pages = {
+    VISUAL = VisualPage,
+    MAIN = MainPage,
+    PARRY = ParryPage,
+    AIM = AimPage
+}
+
+local TabButtons = {}
+
+local function SelectPage(Name)
+    for TabName, Page in pairs(Pages) do
+        Page.Visible = TabName == Name
+    end
+
+    for TabName, Button in pairs(TabButtons) do
+        if TabName == Name then
+            Button.BackgroundColor3 = Color3.fromRGB(55, 75, 105)
+            Button.TextColor3 = Color3.fromRGB(245, 245, 250)
+        else
+            Button.BackgroundColor3 = Color3.fromRGB(30, 30, 37)
+            Button.TextColor3 = Color3.fromRGB(175, 175, 185)
+        end
+    end
+end
+
+local function CreateTab(Name)
+    local Button = Instance.new("TextButton")
+    Button.Name = Name
+    Button.Size = UDim2.new(1, -12, 0, 42)
+    Button.BackgroundColor3 = Color3.fromRGB(30, 30, 37)
+    Button.BorderSizePixel = 0
+    Button.Text = Name
+    Button.TextColor3 = Color3.fromRGB(175, 175, 185)
+    Button.TextSize = 11
+    Button.Font = Enum.Font.GothamMedium
+    Button.AutoButtonColor = false
+    Button.Parent = Sidebar
+
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 6)
+    Corner.Parent = Button
+
+    TabButtons[Name] = Button
+
+    Button.MouseButton1Click:Connect(function()
+        SelectPage(Name)
+    end)
+
+    return Button
+end
+
+CreateTab("VISUAL")
+CreateTab("MAIN")
+CreateTab("PARRY")
+CreateTab("AIM")
+
+SelectPage("VISUAL")
+
+--minimize-state
+
+local Minimized = false
+
+MinimizeButton.MouseButton1Click:Connect(function()
+    Minimized = not Minimized
+
+    Sidebar.Visible = not Minimized
+    Content.Visible = not Minimized
+
+    if Minimized then
+        MainFrame.Size = UDim2.fromOffset(720, 48)
+        MinimizeButton.Text = "+"
+    else
+        MainFrame.Size = UDim2.fromOffset(720, 470)
+        MinimizeButton.Text = "—"
+    end
+end)
+
+--close-state
+
+CloseButton.MouseButton1Click:Connect(function()
+    ScreenGui.Enabled = false
+end)
+
+--drag
+
+local Dragging = false
+local DragStart
+local StartPosition
+
+local function BeginDrag(Input)
+    Dragging = true
+    DragStart = Input.Position
+    StartPosition = MainFrame.Position
+
+    ContextActionService:BindActionAtPriority(
+        CameraBlockAction,
+        BlockCamera,
+        false,
+        Enum.ContextActionPriority.High.Value,
+        Enum.UserInputType.MouseMovement,
+        Enum.UserInputType.MouseButton2,
+        Enum.UserInputType.Touch
+    )
+end
+
+local function UpdateDrag(Input)
+    if not Dragging then
+        return
+    end
+
+    local Delta = Input.Position - DragStart
+
+    MainFrame.Position = UDim2.new(
+        StartPosition.X.Scale,
+        StartPosition.X.Offset + Delta.X,
+        StartPosition.Y.Scale,
+        StartPosition.Y.Offset + Delta.Y
+    )
+end
+
+local function EndDrag()
+    Dragging = false
+    ContextActionService:UnbindAction(CameraBlockAction)
+end
+
+TopBar.InputBegan:Connect(function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1
+    or Input.UserInputType == Enum.UserInputType.Touch then
+
+        BeginDrag(Input)
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseMovement
+    or Input.UserInputType == Enum.UserInputType.Touch then
+
+        UpdateDrag(Input)
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(Input)
+    if Input.UserInputType == Enum.UserInputType.MouseButton1
+    or Input.UserInputType == Enum.UserInputType.Touch then
+
+        EndDrag()
+    end
+end)
+
+--helpers
+
+local function CreateSection(Page, TitleText)
+    local Section = Instance.new("Frame")
+    Section.Name = "Section"
+    Section.Size = UDim2.new(1, -8, 0, 38)
+    Section.BackgroundColor3 = Color3.fromRGB(27, 27, 33)
+    Section.BorderSizePixel = 0
+    Section.Parent = Page
+
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 7)
+    Corner.Parent = Section
+
+    local Label = Instance.new("TextLabel")
+    Label.Size = UDim2.new(1, -20, 1, 0)
+    Label.Position = UDim2.fromOffset(10, 0)
+    Label.BackgroundTransparency = 1
+    Label.Text = TitleText
+    Label.TextColor3 = Color3.fromRGB(235, 235, 240)
+    Label.TextSize = 12
+    Label.Font = Enum.Font.GothamBold
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.Parent = Section
+
+    return Section
+end
+
+local function CreateRow(Page, Height)
+    local Row = Instance.new("Frame")
+    Row.Name = "Row"
+    Row.Size = UDim2.new(1, -8, 0, Height or 42)
+    Row.BackgroundColor3 = Color3.fromRGB(23, 23, 28)
+    Row.BorderSizePixel = 0
+    Row.Parent = Page
+
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 6)
+    Corner.Parent = Row
+
+    return Row
+end
+
+local function CreateLabel(Row, Text)
+    local Label = Instance.new("TextLabel")
+    Label.Size = UDim2.new(1, -20, 1, 0)
+    Label.Position = UDim2.fromOffset(10, 0)
+    Label.BackgroundTransparency = 1
+    Label.Text = Text
+    Label.TextColor3 = Color3.fromRGB(210, 210, 218)
+    Label.TextSize = 11
+    Label.Font = Enum.Font.Gotham
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.TextTruncate = Enum.TextTruncate.AtEnd
+    Label.Parent = Row
+
+    return Label
+end
+
+--toggle
+
+local function CreateToggle(Page, Text, Default, Callback)
+    local Row = CreateRow(Page, 42)
+    CreateLabel(Row, Text)
+
+    local Button = Instance.new("TextButton")
+    Button.Name = "Toggle"
+    Button.Size = UDim2.fromOffset(42, 22)
+    Button.Position = UDim2.new(1, -52, 0.5, -11)
+    Button.BackgroundColor3 = Color3.fromRGB(48, 48, 56)
+    Button.BorderSizePixel = 0
+    Button.Text = ""
+    Button.AutoButtonColor = false
+    Button.Parent = Row
+
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(1, 0)
+    Corner.Parent = Button
+
+    local Circle = Instance.new("Frame")
+    Circle.Name = "Circle"
+    Circle.Size = UDim2.fromOffset(16, 16)
+    Circle.Position = UDim2.fromOffset(3, 3)
+    Circle.BackgroundColor3 = Color3.fromRGB(180, 180, 188)
+    Circle.BorderSizePixel = 0
+    Circle.Parent = Button
+
+    local CircleCorner = Instance.new("UICorner")
+    CircleCorner.CornerRadius = UDim.new(1, 0)
+    CircleCorner.Parent = Circle
+
+    local State = Default == true
+
+    local function Update()
+        if State then
+            Button.BackgroundColor3 = Color3.fromRGB(70, 150, 105)
+            Circle.BackgroundColor3 = Color3.fromRGB(245, 245, 245)
+            Circle.Position = UDim2.new(1, -19, 0, 3)
+        else
+            Button.BackgroundColor3 = Color3.fromRGB(48, 48, 56)
+            Circle.BackgroundColor3 = Color3.fromRGB(180, 180, 188)
+            Circle.Position = UDim2.fromOffset(3, 3)
+        end
+
+        if Callback then
+            Callback(State)
+        end
+    end
+
+    Button.MouseButton1Click:Connect(function()
+        State = not State
+        Update()
+    end)
+
+    Update()
+
+    return {
+        Row = Row,
+        Button = Button,
+
+        Get = function()
+            return State
+        end,
+
+        Set = function(Value)
+            State = Value == true
+            Update()
+        end
+    }
+end
+
+--slider
+
+local function CreateSlider(
+    Page,
+    Text,
+    Minimum,
+    Maximum,
+    Default,
+    Step,
+    Callback
+)
+    local Row = CreateRow(Page, 62)
+    CreateLabel(Row, Text)
+
+    local ValueLabel = Instance.new("TextLabel")
+    ValueLabel.Name = "Value"
+    ValueLabel.Size = UDim2.fromOffset(55, 18)
+    ValueLabel.Position = UDim2.new(1, -65, 0, 7)
+    ValueLabel.BackgroundTransparency = 1
+    ValueLabel.TextColor3 = Color3.fromRGB(180, 180, 190)
+    ValueLabel.TextSize = 10
+    ValueLabel.Font = Enum.Font.Gotham
+    ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
+    ValueLabel.Parent = Row
+
+    local Track = Instance.new("Frame")
+    Track.Name = "Track"
+    Track.Size = UDim2.new(1, -20, 0, 5)
+    Track.Position = UDim2.new(0, 10, 1, -16)
+    Track.BackgroundColor3 = Color3.fromRGB(48, 48, 56)
+    Track.BorderSizePixel = 0
+    Track.Parent = Row
+
+    local TrackCorner = Instance.new("UICorner")
+    TrackCorner.CornerRadius = UDim.new(1, 0)
+    TrackCorner.Parent = Track
+
+    local Fill = Instance.new("Frame")
+    Fill.Name = "Fill"
+    Fill.Size = UDim2.new(0, 0, 1, 0)
+    Fill.BackgroundColor3 = Color3.fromRGB(95, 145, 220)
+    Fill.BorderSizePixel = 0
+    Fill.Parent = Track
+
+    local FillCorner = Instance.new("UICorner")
+    FillCorner.CornerRadius = UDim.new(1, 0)
+    FillCorner.Parent = Fill
+
+    local Knob = Instance.new("Frame")
+    Knob.Name = "Knob"
+    Knob.Size = UDim2.fromOffset(13, 13)
+    Knob.AnchorPoint = Vector2.new(0.5, 0.5)
+    Knob.Position = UDim2.new(0, 0, 0.5, 0)
+    Knob.BackgroundColor3 = Color3.fromRGB(235, 235, 240)
+    Knob.BorderSizePixel = 0
+    Knob.Parent = Track
+
+    local KnobCorner = Instance.new("UICorner")
+    KnobCorner.CornerRadius = UDim.new(1, 0)
+    KnobCorner.Parent = Knob
+
+    local Value = math.clamp(
+        Default or Minimum,
+        Minimum,
+        Maximum
+    )
+
+    local DraggingSlider = false
+
+    local function RoundValue(Number)
+        if not Step or Step <= 0 then
+            return Number
+        end
+
+        local Steps = math.floor(
+            ((Number - Minimum) / Step) + 0.5
+        )
+
+        return Minimum + Steps * Step
+    end
+
+    local function FormatValue(Number)
+        if Step and Step < 1 then
+            return string.format("%.2f", Number)
+        end
+
+        return tostring(math.floor(Number + 0.5))
+    end
+
+    local function Update(Number, FireCallback)
+        Value = math.clamp(
+            RoundValue(Number),
+            Minimum,
+            Maximum
+        )
+
+        local Alpha
+
+        if Maximum == Minimum then
+            Alpha = 0
+        else
+            Alpha = (Value - Minimum)
+                / (Maximum - Minimum)
+        end
+
+        Fill.Size = UDim2.new(
+            Alpha,
+            0,
+            1,
+            0
+        )
+
+        Knob.Position = UDim2.new(
+            Alpha,
+            0,
+            0.5,
+            0
+        )
+
+        ValueLabel.Text = FormatValue(Value)
+
+        if FireCallback and Callback then
+            Callback(Value)
+        end
+    end
+
+    local function SetFromInput(Input)
+        local X = Input.Position.X
+        local StartX = Track.AbsolutePosition.X
+        local Width = Track.AbsoluteSize.X
+
+        if Width <= 0 then
+            return
+        end
+
+        local Alpha = math.clamp(
+            (X - StartX) / Width,
+            0,
+            1
+        )
+
+        local Number = Minimum
+            + ((Maximum - Minimum) * Alpha)
+
+        Update(Number, true)
+    end
+
+    Track.InputBegan:Connect(function(Input)
+        if Input.UserInputType
+            == Enum.UserInputType.MouseButton1
+        or Input.UserInputType
+            == Enum.UserInputType.Touch then
+
+            DraggingSlider = true
+            SetFromInput(Input)
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(Input)
+        if not DraggingSlider then
+            return
+        end
+
+        if Input.UserInputType
+            == Enum.UserInputType.MouseMovement
+        or Input.UserInputType
+            == Enum.UserInputType.Touch then
+
+            SetFromInput(Input)
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(Input)
+        if Input.UserInputType
+            == Enum.UserInputType.MouseButton1
+        or Input.UserInputType
+            == Enum.UserInputType.Touch then
+
+            DraggingSlider = false
+        end
+    end)
+
+    Update(Value, true)
+
+    return {
+        Row = Row,
+        Track = Track,
+
+        Get = function()
+            return Value
+        end,
+
+        Set = function(Number)
+            Update(Number, true)
+        end
+    }
+end
+
+--dropdown-system
+
+local OpenDropdown = nil
+local DropdownRegistry = {}
+
+local function CloseDropdown()
+    if OpenDropdown then
+        OpenDropdown.Container.Visible = false
+        OpenDropdown = nil
+    end
+end
+
+local function IsInsideGui(Object, Position)
+    if not Object or not Object.Visible then
+        return false
+    end
+
+    local ObjectPosition = Object.AbsolutePosition
+    local ObjectSize = Object.AbsoluteSize
+
+    return Position.X >= ObjectPosition.X
+        and Position.X <= ObjectPosition.X + ObjectSize.X
+        and Position.Y >= ObjectPosition.Y
+        and Position.Y <= ObjectPosition.Y + ObjectSize.Y
+end
+
+local function CreateDropdown(Page, Text, Options, Default, Callback)
+    local Row = CreateRow(Page, 48)
+    CreateLabel(Row, Text)
+
+    local Button = Instance.new("TextButton")
+    Button.Name = "DropdownButton"
+    Button.Size = UDim2.fromOffset(145, 28)
+    Button.Position = UDim2.new(1, -155, 0.5, -14)
+    Button.BackgroundColor3 = Color3.fromRGB(39, 39, 46)
+    Button.BorderSizePixel = 0
+    Button.Text = ""
+    Button.AutoButtonColor = false
+    Button.Parent = Row
+
+    local ButtonCorner = Instance.new("UICorner")
+    ButtonCorner.CornerRadius = UDim.new(0, 5)
+    ButtonCorner.Parent = Button
+
+    local ValueLabel = Instance.new("TextLabel")
+    ValueLabel.Size = UDim2.new(1, -30, 1, 0)
+    ValueLabel.Position = UDim2.fromOffset(9, 0)
+    ValueLabel.BackgroundTransparency = 1
+    ValueLabel.TextColor3 = Color3.fromRGB(205, 205, 212)
+    ValueLabel.TextSize = 10
+    ValueLabel.Font = Enum.Font.Gotham
+    ValueLabel.TextXAlignment = Enum.TextXAlignment.Left
+    ValueLabel.TextTruncate = Enum.TextTruncate.AtEnd
+    ValueLabel.Parent = Button
+
+    local Arrow = Instance.new("TextLabel")
+    Arrow.Size = UDim2.fromOffset(20, 20)
+    Arrow.Position = UDim2.new(1, -23, 0.5, -10)
+    Arrow.BackgroundTransparency = 1
+    Arrow.Text = "▼"
+    Arrow.TextColor3 = Color3.fromRGB(160, 160, 168)
+    Arrow.TextSize = 8
+    Arrow.Font = Enum.Font.GothamBold
+    Arrow.Parent = Button
+
+    local Container = Instance.new("Frame")
+    Container.Name = "DropdownList"
+    Container.Size = UDim2.fromOffset(145, 40)
+    Container.BackgroundColor3 = Color3.fromRGB(31, 31, 38)
+    Container.BorderSizePixel = 0
+    Container.Visible = false
+    Container.ZIndex = 100
+    Container.Parent = ScreenGui
+
+    local ContainerCorner = Instance.new("UICorner")
+    ContainerCorner.CornerRadius = UDim.new(0, 6)
+    ContainerCorner.Parent = Container
+
+    local ContainerStroke = Instance.new("UIStroke")
+    ContainerStroke.Color = Color3.fromRGB(58, 58, 68)
+    ContainerStroke.Thickness = 1
+    ContainerStroke.Parent = Container
+
+    local List = Instance.new("ScrollingFrame")
+    List.Name = "List"
+    List.Size = UDim2.fromScale(1, 1)
+    List.BackgroundTransparency = 1
+    List.BorderSizePixel = 0
+    List.ScrollBarThickness = 2
+    List.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 110)
+    List.ZIndex = 101
+    List.Parent = Container
+
+    local Padding = Instance.new("UIPadding")
+    Padding.PaddingTop = UDim.new(0, 4)
+    Padding.PaddingBottom = UDim.new(0, 4)
+    Padding.PaddingLeft = UDim.new(0, 4)
+    Padding.PaddingRight = UDim.new(0, 4)
+    Padding.Parent = List
+
+    local Layout = Instance.new("UIListLayout")
+    Layout.Padding = UDim.new(0, 3)
+    Layout.SortOrder = Enum.SortOrder.LayoutOrder
+    Layout.Parent = List
+
+    local CurrentValue = Default
+
+    if CurrentValue == nil then
+        CurrentValue = Options[1]
+    end
+
+    local function UpdatePosition()
+        if not Button.Visible then
+            return
+        end
+
+        local Position = Button.AbsolutePosition
+        local Size = Button.AbsoluteSize
+
+        local X = Position.X
+        local Y = Position.Y + Size.Y + 4
+
+        local Camera = workspace.CurrentCamera
+
+        if Camera then
+            local Viewport = Camera.ViewportSize
+
+            if X + 145 > Viewport.X then
+                X = Viewport.X - 150
+            end
+
+            if Y + Container.AbsoluteSize.Y > Viewport.Y then
+                Y = Position.Y - Container.AbsoluteSize.Y - 4
+            end
+        end
+
+        Container.Position = UDim2.fromOffset(X, Y)
+    end
+
+    local function UpdateHeight()
+        local Height = math.clamp(
+            (#Options * 29) + 8,
+            37,
+            180
+        )
+
+        Container.Size = UDim2.fromOffset(
+            145,
+            Height
+        )
+
+        List.CanvasSize = UDim2.fromOffset(
+            0,
+            (#Options * 29) + 8
+        )
+    end
+
+    local function Select(Value)
+        CurrentValue = Value
+        ValueLabel.Text = tostring(Value)
+
+        if Callback then
+            Callback(Value)
+        end
+
+        CloseDropdown()
+    end
+
+    for Index, Option in ipairs(Options) do
+        local OptionButton = Instance.new("TextButton")
+        OptionButton.Name = "Option"
+        OptionButton.Size = UDim2.new(1, -8, 0, 26)
+        OptionButton.BackgroundColor3 = Color3.fromRGB(38, 38, 45)
+        OptionButton.BorderSizePixel = 0
+        OptionButton.Text = tostring(Option)
+        OptionButton.TextColor3 = Color3.fromRGB(205, 205, 212)
+        OptionButton.TextSize = 10
+        OptionButton.Font = Enum.Font.Gotham
+        OptionButton.AutoButtonColor = false
+        OptionButton.ZIndex = 102
+        OptionButton.LayoutOrder = Index
+        OptionButton.Parent = List
+
+        local OptionCorner = Instance.new("UICorner")
+        OptionCorner.CornerRadius = UDim.new(0, 4)
+        OptionCorner.Parent = OptionButton
+
+        OptionButton.MouseEnter:Connect(function()
+            OptionButton.BackgroundColor3 =
+                Color3.fromRGB(48, 48, 58)
+        end)
+
+        OptionButton.MouseLeave:Connect(function()
+            OptionButton.BackgroundColor3 =
+                Color3.fromRGB(38, 38, 45)
+        end)
+
+        OptionButton.MouseButton1Click:Connect(function()
+            Select(Option)
+        end)
+    end
+
+    UpdateHeight()
+    ValueLabel.Text = tostring(CurrentValue)
+
+    Button.MouseButton1Click:Connect(function()
+        if OpenDropdown
+        and OpenDropdown.Container == Container then
+
+            CloseDropdown()
+            return
+        end
+
+        CloseDropdown()
+
+        UpdateHeight()
+        UpdatePosition()
+
+        Container.Visible = true
+
+        OpenDropdown = {
+            Container = Container,
+            Button = Button,
+            UpdatePosition = UpdatePosition
+        }
+    end)
+
+    DropdownRegistry[#DropdownRegistry + 1] = {
+        Container = Container,
+        Button = Button,
+        UpdatePosition = UpdatePosition
+    }
+
+    return {
+        Row = Row,
+        Button = Button,
+
+        Get = function()
+            return CurrentValue
+        end,
+
+        Set = function(Value)
+            if table.find(Options, Value) then
+                Select(Value)
+            end
+        end
+    }
+end
+
+--multi-dropdown
+
+local function CreateMultiDropdown(
+    Page,
+    Text,
+    Options,
+    Defaults,
+    Callback
+)
+    local Row = CreateRow(Page, 48)
+    CreateLabel(Row, Text)
+
+    local Button = Instance.new("TextButton")
+    Button.Name = "MultiDropdownButton"
+    Button.Size = UDim2.fromOffset(145, 28)
+    Button.Position = UDim2.new(1, -155, 0.5, -14)
+    Button.BackgroundColor3 = Color3.fromRGB(39, 39, 46)
+    Button.BorderSizePixel = 0
+    Button.Text = ""
+    Button.AutoButtonColor = false
+    Button.Parent = Row
+
+    local ButtonCorner = Instance.new("UICorner")
+    ButtonCorner.CornerRadius = UDim.new(0, 5)
+    ButtonCorner.Parent = Button
+
+    local ValueLabel = Instance.new("TextLabel")
+    ValueLabel.Size = UDim2.new(1, -30, 1, 0)
+    ValueLabel.Position = UDim2.fromOffset(9, 0)
+    ValueLabel.BackgroundTransparency = 1
+    ValueLabel.TextColor3 = Color3.fromRGB(205, 205, 212)
+    ValueLabel.TextSize = 10
+    ValueLabel.Font = Enum.Font.Gotham
+    ValueLabel.TextXAlignment = Enum.TextXAlignment.Left
+    ValueLabel.TextTruncate = Enum.TextTruncate.AtEnd
+    ValueLabel.Parent = Button
+
+    local Arrow = Instance.new("TextLabel")
+    Arrow.Size = UDim2.fromOffset(20, 20)
+    Arrow.Position = UDim2.new(1, -23, 0.5, -10)
+    Arrow.BackgroundTransparency = 1
+    Arrow.Text = "▼"
+    Arrow.TextColor3 = Color3.fromRGB(160, 160, 168)
+    Arrow.TextSize = 8
+    Arrow.Font = Enum.Font.GothamBold
+    Arrow.Parent = Button
+
+    local Container = Instance.new("Frame")
+    Container.Name = "MultiDropdownList"
+    Container.Size = UDim2.fromOffset(145, 40)
+    Container.BackgroundColor3 = Color3.fromRGB(31, 31, 38)
+    Container.BorderSizePixel = 0
+    Container.Visible = false
+    Container.ZIndex = 100
+    Container.Parent = ScreenGui
+
+    local ContainerCorner = Instance.new("UICorner")
+    ContainerCorner.CornerRadius = UDim.new(0, 6)
+    ContainerCorner.Parent = Container
+
+    local ContainerStroke = Instance.new("UIStroke")
+    ContainerStroke.Color = Color3.fromRGB(58, 58, 68)
+    ContainerStroke.Thickness = 1
+    ContainerStroke.Parent = Container
+
+    local List = Instance.new("ScrollingFrame")
+    List.Name = "List"
+    List.Size = UDim2.fromScale(1, 1)
+    List.BackgroundTransparency = 1
+    List.BorderSizePixel = 0
+    List.ScrollBarThickness = 2
+    List.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 110)
+    List.ZIndex = 101
+    List.Parent = Container
+
+    local Padding = Instance.new("UIPadding")
+    Padding.PaddingTop = UDim.new(0, 4)
+    Padding.PaddingBottom = UDim.new(0, 4)
+    Padding.PaddingLeft = UDim.new(0, 4)
+    Padding.PaddingRight = UDim.new(0, 4)
+    Padding.Parent = List
+
+    local Layout = Instance.new("UIListLayout")
+    Layout.Padding = UDim.new(0, 3)
+    Layout.SortOrder = Enum.SortOrder.LayoutOrder
+    Layout.Parent = List
+
+    local Selected = {}
+
+    for _, Option in ipairs(Defaults or {}) do
+        Selected[Option] = true
+    end
+
+    local OptionButtons = {}
+
+    local function UpdateText()
+        local Names = {}
+
+        for _, Option in ipairs(Options) do
+            if Selected[Option] then
+                Names[#Names + 1] = tostring(Option)
+            end
+        end
+
+        if #Names == 0 then
+            ValueLabel.Text = "None"
+        else
+            ValueLabel.Text = table.concat(
+                Names,
+                ", "
+            )
+        end
+    end
+
+    local function FireCallback()
+        if not Callback then
+            return
+        end
+
+        local Result = {}
+
+        for _, Option in ipairs(Options) do
+            Result[Option] = Selected[Option] == true
+        end
+
+        Callback(Result)
+    end
+
+    local function UpdatePosition()
+        if not Button.Visible then
+            return
+        end
+
+        local Position = Button.AbsolutePosition
+        local Size = Button.AbsoluteSize
+
+        local X = Position.X
+        local Y = Position.Y + Size.Y + 4
+
+        local Camera = workspace.CurrentCamera
+
+        if Camera then
+            local Viewport = Camera.ViewportSize
+
+            if X + 145 > Viewport.X then
+                X = Viewport.X - 150
+            end
+
+            if Y + Container.AbsoluteSize.Y > Viewport.Y then
+                Y = Position.Y - Container.AbsoluteSize.Y - 4
+            end
+        end
+
+        Container.Position = UDim2.fromOffset(X, Y)
+    end
+
+    local function UpdateHeight()
+        local Height = math.clamp(
+            (#Options * 29) + 8,
+            37,
+            180
+        )
+
+        Container.Size = UDim2.fromOffset(
+            145,
+            Height
+        )
+
+        List.CanvasSize = UDim2.fromOffset(
+            0,
+            (#Options * 29) + 8
+        )
+    end
+
+    local function UpdateOption(
+        Option,
+        OptionButton
+    )
+        if Selected[Option] then
+            OptionButton.Text =
+                "✓  " .. tostring(Option)
+
+            OptionButton.BackgroundColor3 =
+                Color3.fromRGB(55, 70, 62)
+        else
+            OptionButton.Text =
+                tostring(Option)
+
+            OptionButton.BackgroundColor3 =
+                Color3.fromRGB(38, 38, 45)
+        end
+    end
+
+    for Index, Option in ipairs(Options) do
+        local OptionButton = Instance.new("TextButton")
+        OptionButton.Name = "Option"
+        OptionButton.Size = UDim2.new(1, -8, 0, 26)
+        OptionButton.BackgroundColor3 = Color3.fromRGB(38, 38, 45)
+        OptionButton.BorderSizePixel = 0
+        OptionButton.TextColor3 = Color3.fromRGB(205, 205, 212)
+        OptionButton.TextSize = 10
+        OptionButton.Font = Enum.Font.Gotham
+        OptionButton.AutoButtonColor = false
+        OptionButton.ZIndex = 102
+        OptionButton.LayoutOrder = Index
+        OptionButton.Parent = List
+
+        local OptionCorner = Instance.new("UICorner")
+        OptionCorner.CornerRadius = UDim.new(0, 4)
+        OptionCorner.Parent = OptionButton
+
+        OptionButtons[Option] = OptionButton
+
+        UpdateOption(
+            Option,
+            OptionButton
+        )
+
+        OptionButton.MouseEnter:Connect(function()
+            if not Selected[Option] then
+                OptionButton.BackgroundColor3 =
+                    Color3.fromRGB(48, 48, 58)
+            end
+        end)
+
+        OptionButton.MouseLeave:Connect(function()
+            UpdateOption(
+                Option,
+                OptionButton
+            )
+        end)
+
+        OptionButton.MouseButton1Click:Connect(function()
+            Selected[Option] =
+                not Selected[Option]
+
+            UpdateOption(
+                Option,
+                OptionButton
+            )
+
+            UpdateText()
+            FireCallback()
+        end)
+    end
+
+    UpdateHeight()
+    UpdateText()
+
+    Button.MouseButton1Click:Connect(function()
+        if OpenDropdown
+        and OpenDropdown.Container == Container then
+
+            CloseDropdown()
+            return
+        end
+
+        CloseDropdown()
+
+        UpdateHeight()
+        UpdatePosition()
+
+        Container.Visible = true
+
+        OpenDropdown = {
+            Container = Container,
+            Button = Button,
+            UpdatePosition = UpdatePosition
+        }
+    end)
+
+    DropdownRegistry[#DropdownRegistry + 1] = {
+        Container = Container,
+        Button = Button,
+        UpdatePosition = UpdatePosition
+    }
+
+    return {
+        Row = Row,
+        Button = Button,
+
+        Get = function()
+            local Result = {}
+
+            for _, Option in ipairs(Options) do
+                Result[Option] =
+                    Selected[Option] == true
+            end
+
+            return Result
+        end,
+
+        Set = function(Values)
+            if typeof(Values) ~= "table" then
+                return
+            end
+
+            for _, Option in ipairs(Options) do
+                Selected[Option] =
+                    Values[Option] == true
+
+                UpdateOption(
+                    Option,
+                    OptionButtons[Option]
+                )
+            end
+
+            UpdateText()
+            FireCallback()
+        end
+    }
+end
+
+--outside-click
+
+UserInputService.InputBegan:Connect(function(Input)
+    if not OpenDropdown then
+        return
+    end
+
+    if Input.UserInputType
+        ~= Enum.UserInputType.MouseButton1
+    and Input.UserInputType
+        ~= Enum.UserInputType.Touch then
+        return
+    end
+
+    local Position = Input.Position
+
+    local InsideContainer = IsInsideGui(
+        OpenDropdown.Container,
+        Position
+    )
+
+    local InsideButton = IsInsideGui(
+        OpenDropdown.Button,
+        Position
+    )
+
+    if not InsideContainer and not InsideButton then
+        CloseDropdown()
+    end
+end)
+
+--dropdown-position
+
+RunService.RenderStepped:Connect(function()
+    if OpenDropdown
+    and OpenDropdown.Container.Visible then
+
+        OpenDropdown.UpdatePosition()
+    end
+end)
+
+--color-picker
+
+local OpenColorPicker = nil
+
+local function CloseColorPicker()
+    if OpenColorPicker then
+        OpenColorPicker.Container.Visible = false
+        OpenColorPicker = nil
+    end
+end
+
+local function CreateColorPicker(Page, Text, Default, Callback)
+    local Row = CreateRow(Page, 48)
+    CreateLabel(Row, Text)
+
+    local Button = Instance.new("TextButton")
+    Button.Name = "ColorButton"
+    Button.Size = UDim2.fromOffset(42, 24)
+    Button.Position = UDim2.new(1, -52, 0.5, -12)
+    Button.BackgroundColor3 = Default or Color3.new(1, 1, 1)
+    Button.BorderSizePixel = 0
+    Button.Text = ""
+    Button.AutoButtonColor = false
+    Button.Parent = Row
+
+    local ButtonCorner = Instance.new("UICorner")
+    ButtonCorner.CornerRadius = UDim.new(0, 5)
+    ButtonCorner.Parent = Button
+
+    local Container = Instance.new("Frame")
+    Container.Name = "ColorPicker"
+    Container.Size = UDim2.fromOffset(210, 145)
+    Container.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+    Container.BorderSizePixel = 0
+    Container.Visible = false
+    Container.ZIndex = 200
+    Container.Parent = ScreenGui
+
+    local ContainerCorner = Instance.new("UICorner")
+    ContainerCorner.CornerRadius = UDim.new(0, 7)
+    ContainerCorner.Parent = Container
+
+    local Stroke = Instance.new("UIStroke")
+    Stroke.Color = Color3.fromRGB(58, 58, 68)
+    Stroke.Thickness = 1
+    Stroke.Parent = Container
+
+    local Title = Instance.new("TextLabel")
+    Title.Size = UDim2.new(1, -20, 0, 22)
+    Title.Position = UDim2.fromOffset(10, 5)
+    Title.BackgroundTransparency = 1
+    Title.Text = Text
+    Title.TextColor3 = Color3.fromRGB(220, 220, 225)
+    Title.TextSize = 10
+    Title.Font = Enum.Font.GothamMedium
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.ZIndex = 201
+    Title.Parent = Container
+
+    --hue
+
+    local Hue = Instance.new("Frame")
+    Hue.Name = "Hue"
+    Hue.Size = UDim2.fromOffset(185, 16)
+    Hue.Position = UDim2.fromOffset(12, 34)
+    Hue.BackgroundColor3 = Color3.new(1, 1, 1)
+    Hue.BorderSizePixel = 0
+    Hue.ZIndex = 201
+    Hue.Parent = Container
+
+    local HueCorner = Instance.new("UICorner")
+    HueCorner.CornerRadius = UDim.new(0, 4)
+    HueCorner.Parent = Hue
+
+    local HueGradient = Instance.new("UIGradient")
+    HueGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 0, 0)),
+        ColorSequenceKeypoint.new(0.16, Color3.fromRGB(255, 255, 0)),
+        ColorSequenceKeypoint.new(0.33, Color3.fromRGB(0, 255, 0)),
+        ColorSequenceKeypoint.new(0.50, Color3.fromRGB(0, 255, 255)),
+        ColorSequenceKeypoint.new(0.66, Color3.fromRGB(0, 0, 255)),
+        ColorSequenceKeypoint.new(0.83, Color3.fromRGB(255, 0, 255)),
+        ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 0, 0))
+    })
+    HueGradient.Parent = Hue
+
+    local HueKnob = Instance.new("Frame")
+    HueKnob.Name = "HueKnob"
+    HueKnob.Size = UDim2.fromOffset(6, 20)
+    HueKnob.AnchorPoint = Vector2.new(0.5, 0.5)
+    HueKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    HueKnob.BorderSizePixel = 0
+    HueKnob.ZIndex = 202
+    HueKnob.Parent = Hue
+
+    local HueKnobCorner = Instance.new("UICorner")
+    HueKnobCorner.CornerRadius = UDim.new(0, 2)
+    HueKnobCorner.Parent = Hue
+
+    --saturation-value
+
+    local SV = Instance.new("Frame")
+    SV.Name = "SaturationValue"
+    SV.Size = UDim2.fromOffset(185, 60)
+    SV.Position = UDim2.fromOffset(12, 56)
+    SV.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    SV.BorderSizePixel = 0
+    SV.ZIndex = 201
+    SV.Parent = Container
+
+    local SVCorner = Instance.new("UICorner")
+    SVCorner.CornerRadius = UDim.new(0, 4)
+    SVCorner.Parent = SV
+
+    local WhiteLayer = Instance.new("Frame")
+    WhiteLayer.Size = UDim2.fromScale(1, 1)
+    WhiteLayer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    WhiteLayer.BorderSizePixel = 0
+    WhiteLayer.ZIndex = 202
+    WhiteLayer.Parent = SV
+
+    local WhiteGradient = Instance.new("UIGradient")
+    WhiteGradient.Color = ColorSequence.new(
+        Color3.fromRGB(255, 255, 255),
+        Color3.fromRGB(255, 255, 255)
+    )
+    WhiteGradient.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0),
+        NumberSequenceKeypoint.new(1, 1)
+    })
+    WhiteGradient.Parent = WhiteLayer
+
+    local BlackLayer = Instance.new("Frame")
+    BlackLayer.Size = UDim2.fromScale(1, 1)
+    BlackLayer.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    BlackLayer.BorderSizePixel = 0
+    BlackLayer.ZIndex = 203
+    BlackLayer.Parent = SV
+
+    local BlackGradient = Instance.new("UIGradient")
+    BlackGradient.Color = ColorSequence.new(
+        Color3.fromRGB(0, 0, 0),
+        Color3.fromRGB(0, 0, 0)
+    )
+    BlackGradient.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(1, 0)
+    })
+    BlackGradient.Rotation = 90
+    BlackGradient.Parent = BlackLayer
+
+    local SVKnob = Instance.new("Frame")
+    SVKnob.Name = "SVKnob"
+    SVKnob.Size = UDim2.fromOffset(9, 9)
+    SVKnob.AnchorPoint = Vector2.new(0.5, 0.5)
+    SVKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    SVKnob.BorderSizePixel = 0
+    SVKnob.ZIndex = 204
+    SVKnob.Parent = SV
+
+    local SVKnobCorner = Instance.new("UICorner")
+    SVKnobCorner.CornerRadius = UDim.new(1, 0)
+    SVKnobCorner.Parent = SVKnob
+
+    --state
+
+    local CurrentColor = Default or Color3.new(1, 1, 1)
+    local H, S, V = CurrentColor:ToHSV()
+
+    local DragHue = false
+    local DragSV = false
+
+    local function UpdateColor(FireCallback)
+        CurrentColor = Color3.fromHSV(H, S, V)
+
+        Button.BackgroundColor3 = CurrentColor
+
+        HueKnob.Position = UDim2.new(
+            H,
+            0,
+            0.5,
+            0
+        )
+
+        SV.BackgroundColor3 =
+            Color3.fromHSV(H, 1, 1)
+
+        SVKnob.Position = UDim2.new(
+            S,
+            0,
+            1 - V,
+            0
+        )
+
+        if FireCallback and Callback then
+            Callback(CurrentColor)
+        end
+    end
+
+    local function SetHue(Input)
+        local X = Input.Position.X
+        local StartX = Hue.AbsolutePosition.X
+        local Width = Hue.AbsoluteSize.X
+
+        if Width <= 0 then
+            return
+        end
+
+        H = math.clamp(
+            (X - StartX) / Width,
+            0,
+            1
+        )
+
+        UpdateColor(true)
+    end
+
+    local function SetSV(Input)
+        local X = Input.Position.X
+        local Y = Input.Position.Y
+
+        local StartX = SV.AbsolutePosition.X
+        local StartY = SV.AbsolutePosition.Y
+
+        local Width = SV.AbsoluteSize.X
+        local Height = SV.AbsoluteSize.Y
+
+        if Width <= 0 or Height <= 0 then
+            return
+        end
+
+        S = math.clamp(
+            (X - StartX) / Width,
+            0,
+            1
+        )
+
+        V = math.clamp(
+            1 - ((Y - StartY) / Height),
+            0,
+            1
+        )
+
+        UpdateColor(true)
+    end
+
+    Hue.InputBegan:Connect(function(Input)
+        if Input.UserInputType
+            == Enum.UserInputType.MouseButton1
+        or Input.UserInputType
+            == Enum.UserInputType.Touch then
+
+            DragHue = true
+            SetHue(Input)
+        end
+    end)
+
+    SV.InputBegan:Connect(function(Input)
+        if Input.UserInputType
+            == Enum.UserInputType.MouseButton1
+        or Input.UserInputType
+            == Enum.UserInputType.Touch then
+
+            DragSV = true
+            SetSV(Input)
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(Input)
+        if Input.UserInputType
+            ~= Enum.UserInputType.MouseMovement
+        and Input.UserInputType
+            ~= Enum.UserInputType.Touch then
+            return
+        end
+
+        if DragHue then
+            SetHue(Input)
+        end
+
+        if DragSV then
+            SetSV(Input)
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(Input)
+        if Input.UserInputType
+            == Enum.UserInputType.MouseButton1
+        or Input.UserInputType
+            == Enum.UserInputType.Touch then
+
+            DragHue = false
+            DragSV = false
+        end
+    end)
+
+    local function UpdatePosition()
+        local Position = Button.AbsolutePosition
+        local Size = Button.AbsoluteSize
+
+        local X = Position.X - 210
+        local Y = Position.Y + Size.Y + 5
+
+        local Camera = workspace.CurrentCamera
+
+        if Camera then
+            local Viewport = Camera.ViewportSize
+
+            if X < 5 then
+                X = Position.X + Size.X + 5
+            end
+
+            if X + 210 > Viewport.X then
+                X = Viewport.X - 215
+            end
+
+            if Y + 145 > Viewport.Y then
+                Y = Position.Y - 150
+            end
+
+            if Y < 5 then
+                Y = 5
+            end
+        end
+
+        Container.Position = UDim2.fromOffset(X, Y)
+    end
+
+    Button.MouseButton1Click:Connect(function()
+        if OpenColorPicker
+        and OpenColorPicker.Container == Container then
+
+            CloseColorPicker()
+            return
+        end
+
+        CloseColorPicker()
+        CloseDropdown()
+
+        UpdatePosition()
+
+        Container.Visible = true
+
+        OpenColorPicker = {
+            Container = Container,
+            Button = Button,
+            UpdatePosition = UpdatePosition
+        }
+    end)
+
+    --initialize
+
+    UpdateColor(false)
+
+    return {
+        Row = Row,
+        Button = Button,
+
+        Get = function()
+            return CurrentColor
+        end,
+
+        Set = function(Color)
+            if typeof(Color) ~= "Color3" then
+                return
+            end
+
+            CurrentColor = Color
+            H, S, V = Color:ToHSV()
+
+            UpdateColor(true)
+        end
+    }
+end
+
+--outside-color-picker
+
+UserInputService.InputBegan:Connect(function(Input)
+    if not OpenColorPicker then
+        return
+    end
+
+    if Input.UserInputType
+        ~= Enum.UserInputType.MouseButton1
+    and Input.UserInputType
+        ~= Enum.UserInputType.Touch then
+        return
+    end
+
+    local Position = Input.Position
+
+    local InsidePicker = IsInsideGui(
+        OpenColorPicker.Container,
+        Position
+    )
+
+    local InsideButton = IsInsideGui(
+        OpenColorPicker.Button,
+        Position
+    )
+
+    if not InsidePicker and not InsideButton then
+        CloseColorPicker()
+    end
+end)
+
+--color-picker-position
+
+RunService.RenderStepped:Connect(function()
+    if OpenColorPicker
+    and OpenColorPicker.Container.Visible then
+
+        OpenColorPicker.UpdatePosition()
+    end
+end)
+
+--visual
+
+CreateSection(
+    VisualPage,
+    "Highlight ESP Settings"
+)
+
+CreateSlider(
+    VisualPage,
+    "ESP Fill Transparency",
+    0,
+    1,
+    Settings.Visual.ESPFillTransparency,
+    0.01,
+    function(Value)
+        Settings.Visual.ESPFillTransparency = Value
+    end
+)
+
+CreateSlider(
+    VisualPage,
+    "ESP Outline Transparency",
+    0,
+    1,
+    Settings.Visual.ESPOutlineTransparency,
+    0.01,
+    function(Value)
+        Settings.Visual.ESPOutlineTransparency = Value
+    end
+)
+
+CreateSlider(
+    VisualPage,
+    "ESP Text Size",
+    8,
+    24,
+    Settings.Visual.ESPTextSize,
+    1,
+    function(Value)
+        Settings.Visual.ESPTextSize = Value
+    end
+)
+
+CreateSection(
+    VisualPage,
+    "Player Highlight ESP"
+)
+
+CreateToggle(
+    VisualPage,
+    "Enable Player ESP",
+    Settings.Visual.EnablePlayerESP,
+    function(Value)
+        Settings.Visual.EnablePlayerESP = Value
+    end
+)
+
+CreateMultiDropdown(
+    VisualPage,
+    "Select Player ESP",
+    {
+        "Survivor ESP",
+        "Killer ESP",
+        "Spectator ESP"
+    },
+    {},
+    function(Values)
+        Settings.Visual.PlayerESPTypes.Survivor =
+            Values["Survivor ESP"] == true
+
+        Settings.Visual.PlayerESPTypes.Killer =
+            Values["Killer ESP"] == true
+
+        Settings.Visual.PlayerESPTypes.Spectator =
+            Values["Spectator ESP"] == true
+    end
+)
+
+CreateToggle(
+    VisualPage,
+    "Survivor Items ESP",
+    Settings.Visual.SurvivorItemsESP,
+    function(Value)
+        Settings.Visual.SurvivorItemsESP = Value
+    end
+)
+
+CreateToggle(
+    VisualPage,
+    "Player Nametags",
+    Settings.Visual.PlayerNametags,
+    function(Value)
+        Settings.Visual.PlayerNametags = Value
+    end
+)
+
+CreateToggle(
+    VisualPage,
+    "Player Distance ESP",
+    Settings.Visual.PlayerDistanceESP,
+    function(Value)
+        Settings.Visual.PlayerDistanceESP = Value
+    end
+)
+
+CreateToggle(
+    VisualPage,
+    "Survivor Killer Warning",
+    Settings.Visual.SurvivorKillerWarning,
+    function(Value)
+        Settings.Visual.SurvivorKillerWarning = Value
+    end
+)
+
+CreateColorPicker(
+    VisualPage,
+    "Survivor Color",
+    Settings.Visual.SurvivorColor,
+    function(Value)
+        Settings.Visual.SurvivorColor = Value
+    end
+)
+
+CreateColorPicker(
+    VisualPage,
+    "Killer Color",
+    Settings.Visual.KillerColor,
+    function(Value)
+        Settings.Visual.KillerColor = Value
+    end
+)
+
+CreateColorPicker(
+    VisualPage,
+    "Spectator Color",
+    Settings.Visual.SpectatorColor,
+    function(Value)
+        Settings.Visual.SpectatorColor = Value
+    end
+)
+
+CreateSection(
+    VisualPage,
+    "World Highlight ESP"
+)
+
+CreateToggle(
+    VisualPage,
+    "Enable World ESP",
+    Settings.Visual.EnableWorldESP,
+    function(Value)
+        Settings.Visual.EnableWorldESP = Value
+    end
+)
+
+CreateMultiDropdown(
+    VisualPage,
+    "Select World Objects",
+    {
+        "Generators",
+        "Hooks",
+        "Gates",
+        "Windows",
+        "Pallets",
+        "SCP / Zombie"
+    },
+    {},
+    function(Values)
+        Settings.Visual.WorldObjects.Generators =
+            Values["Generators"] == true
+
+        Settings.Visual.WorldObjects.Hooks =
+            Values["Hooks"] == true
+
+        Settings.Visual.WorldObjects.Gates =
+            Values["Gates"] == true
+
+        Settings.Visual.WorldObjects.Windows =
+            Values["Windows"] == true
+
+        Settings.Visual.WorldObjects.Pallets =
+            Values["Pallets"] == true
+
+        Settings.Visual.WorldObjects.SCPZombie =
+            Values["SCP / Zombie"] == true
+    end
+)
+
+CreateToggle(
+    VisualPage,
+    "World Nametags",
+    Settings.Visual.WorldNametags,
+    function(Value)
+        Settings.Visual.WorldNametags = Value
+    end
+)
+
+CreateToggle(
+    VisualPage,
+    "World Distance ESP",
+    Settings.Visual.WorldDistanceESP,
+    function(Value)
+        Settings.Visual.WorldDistanceESP = Value
+    end
+)
+
+CreateColorPicker(
+    VisualPage,
+    "Generator Color",
+    Settings.Visual.GeneratorColor,
+    function(Value)
+        Settings.Visual.GeneratorColor = Value
+    end
+)
+
+CreateColorPicker(
+    VisualPage,
+    "Hook Color",
+    Settings.Visual.HookColor,
+    function(Value)
+        Settings.Visual.HookColor = Value
+    end
+)
+
+CreateColorPicker(
+    VisualPage,
+    "Gate Color",
+    Settings.Visual.GateColor,
+    function(Value)
+        Settings.Visual.GateColor = Value
+    end
+)
+
+CreateColorPicker(
+    VisualPage,
+    "Window Color",
+    Settings.Visual.WindowColor,
+    function(Value)
+        Settings.Visual.WindowColor = Value
+    end
+)
+
+CreateColorPicker(
+    VisualPage,
+    "Pallet Color",
+    Settings.Visual.PalletColor,
+    function(Value)
+        Settings.Visual.PalletColor = Value
+    end
+)
+
+CreateColorPicker(
+    VisualPage,
+    "SCP / Zombie Color",
+    Settings.Visual.SCPZombieColor,
+    function(Value)
+        Settings.Visual.SCPZombieColor = Value
+    end
+)
+
+--main
+
+CreateSection(
+    MainPage,
+    "Automation"
+)
+
+CreateToggle(
+    MainPage,
+    "Auto Skillcheck",
+    Settings.Main.AutoSkillcheck,
+    function(Value)
+        Settings.Main.AutoSkillcheck = Value
+    end
+)
+
+CreateToggle(
+    MainPage,
+    "Hide Skillcheck UI",
+    Settings.Main.HideSkillcheckUI,
+    function(Value)
+        Settings.Main.HideSkillcheckUI = Value
+    end
+)
+
+CreateToggle(
+    MainPage,
+    "Boost Gen Bypass",
+    Settings.Main.BoostGenBypass,
+    function(Value)
+        Settings.Main.BoostGenBypass = Value
+    end
+)
+
+CreateDropdown(
+    MainPage,
+    "Skillcheck Mode",
+    {
+        "Normal",
+        "Perfect",
+        "Instant"
+    },
+    Settings.Main.SkillcheckMode,
+    function(Value)
+        Settings.Main.SkillcheckMode = Value
+    end
+)
+
+--parry
+
+CreateSection(
+    ParryPage,
+    "Parry"
+)
+
+CreateToggle(
+    ParryPage,
+    "Auto Parry",
+    Settings.Parry.AutoParry,
+    function(Value)
+        Settings.Parry.AutoParry = Value
+    end
+)
+
+CreateToggle(
+    ParryPage,
+    "Auto Parry Agresif",
+    Settings.Parry.AutoParryAgresif,
+    function(Value)
+        Settings.Parry.AutoParryAgresif = Value
+    end
+)
+
+CreateSlider(
+    ParryPage,
+    "Parry Distance Trigger",
+    1,
+    50,
+    Settings.Parry.ParryDistanceTrigger,
+    1,
+    function(Value)
+        Settings.Parry.ParryDistanceTrigger = Value
+    end
+)
+
+CreateToggle(
+    ParryPage,
+    "Show Parry Range Circle",
+    Settings.Parry.ShowParryRangeCircle,
+    function(Value)
+        Settings.Parry.ShowParryRangeCircle = Value
+    end
+)
+
+--aim
+
+CreateSection(
+    AimPage,
+    "Aimbot"
+)
+
+CreateToggle(
+    AimPage,
+    "Enable Aimbot",
+    Settings.Aim.EnableAimbot,
+    function(Value)
+        Settings.Aim.EnableAimbot = Value
+    end
+)
+
+CreateToggle(
+    AimPage,
+    "Use RMB to aim",
+    Settings.Aim.UseRMB,
+    function(Value)
+        Settings.Aim.UseRMB = Value
+    end
+)
+
+CreateToggle(
+    AimPage,
+    "Show FOV Circle",
+    Settings.Aim.ShowFOVCircle,
+    function(Value)
+        Settings.Aim.ShowFOVCircle = Value
+    end
+)
+
+CreateSlider(
+    AimPage,
+    "FOV Size",
+    10,
+    500,
+    Settings.Aim.FOVSize,
+    1,
+    function(Value)
+        Settings.Aim.FOVSize = Value
+    end
+)
+
+CreateSlider(
+    AimPage,
+    "Smoothness",
+    0.05,
+    1,
+    Settings.Aim.Smoothness,
+    0.05,
+    function(Value)
+        Settings.Aim.Smoothness = Value
+    end
+)
+
+CreateToggle(
+    AimPage,
+    "Visibility Check",
+    Settings.Aim.VisibilityCheck,
+    function(Value)
+        Settings.Aim.VisibilityCheck = Value
+    end
+)
+
+CreateToggle(
+    AimPage,
+    "Prediction",
+    Settings.Aim.Prediction,
+    function(Value)
+        Settings.Aim.Prediction = Value
+    end
+)
+
+--advanced-crosshair
+
+CreateSection(
+    AimPage,
+    "Advanced Crosshair"
+)
+
+CreateToggle(
+    AimPage,
+    "Enable Crosshair",
+    Settings.Aim.EnableCrosshair,
+    function(Value)
+        Settings.Aim.EnableCrosshair = Value
+    end
+)
+
+CreateColorPicker(
+    AimPage,
+    "Crosshair Color",
+    Settings.Aim.CrosshairColor,
+    function(Value)
+        Settings.Aim.CrosshairColor = Value
+    end
+)
+
+CreateDropdown(
+    AimPage,
+    "Crosshair Style",
+    {
+        "Dot",
+        "Plus",
+        "X",
+        "Box"
+    },
+    Settings.Aim.CrosshairStyle,
+    function(Value)
+        Settings.Aim.CrosshairStyle = Value
+    end
+)
+
+CreateSlider(
+    AimPage,
+    "Crosshair Size",
+    1,
+    30,
+    Settings.Aim.CrosshairSize,
+    1,
+    function(Value)
+        Settings.Aim.CrosshairSize = Value
+    end
+)
+
+CreateSlider(
+    AimPage,
+    "Crosshair Thickness",
+    1,
+    10,
+    Settings.Aim.CrosshairThickness,
+    1,
+    function(Value)
+        Settings.Aim.CrosshairThickness = Value
+    end
+)
+
+CreateSlider(
+    AimPage,
+    "Crosshair Gap",
+    0,
+    30,
+    Settings.Aim.CrosshairGap,
+    1,
+    function(Value)
+        Settings.Aim.CrosshairGap = Value
+    end
+)
+
+CreateSlider(
+    AimPage,
+    "Position X Offset",
+    -100,
+    100,
+    Settings.Aim.PositionXOffset,
+    1,
+    function(Value)
+        Settings.Aim.PositionXOffset = Value
+    end
+)
+
+CreateSlider(
+    AimPage,
+    "Position Y Offset",
+    -100,
+    100,
+    Settings.Aim.PositionYOffset,
+    1,
+    function(Value)
+        Settings.Aim.PositionYOffset = Value
+    end
+)
+
+--silent-aim-tof
+
+CreateSection(
+    AimPage,
+    "Silent Aim Twist Of Fate"
+)
+
+CreateToggle(
+    AimPage,
+    "Silent Aim Twist Of Fate",
+    Settings.Aim.SilentAimToF,
+    function(Value)
+        Settings.Aim.SilentAimToF = Value
+    end
+)
+
+CreateToggle(
+    AimPage,
+    "ToF Laser",
+    Settings.Aim.ToFLaser,
+    function(Value)
+        Settings.Aim.ToFLaser = Value
+    end
+)
+
+CreateToggle(
+    AimPage,
+    "ToF Wall Check",
+    Settings.Aim.ToFWallCheck,
+    function(Value)
+        Settings.Aim.ToFWallCheck = Value
+    end
+)
+
+CreateToggle(
+    AimPage,
+    "ToF Block When Knocked",
+    Settings.Aim.ToFBlockWhenKnocked,
+    function(Value)
+        Settings.Aim.ToFBlockWhenKnocked = Value
+    end
+)
+
+CreateDropdown(
+    AimPage,
+    "ToF Target Mode",
+    {
+        "Killer",
+        "Survivors",
+        "Zombie"
+    },
+    Settings.Aim.ToFTargetMode,
+    function(Value)
+        Settings.Aim.ToFTargetMode = Value
+    end
+)
+
+--silent-aim-flashlight
+
+CreateSection(
+    AimPage,
+    "Silent Aim Flashlight"
+)
+
+CreateToggle(
+    AimPage,
+    "Silent Aim Flashlight",
+    Settings.Aim.SilentAimFlashlight,
+    function(Value)
+        Settings.Aim.SilentAimFlashlight = Value
+    end
+)
+
+CreateToggle(
+    AimPage,
+    "Flashlight Laser",
+    Settings.Aim.FlashlightLaser,
+    function(Value)
+        Settings.Aim.FlashlightLaser = Value
+    end
+)
+
+CreateDropdown(
+    AimPage,
+    "Flashlight Target Part",
+    {
+        "Head",
+        "HumanoidRootPart",
+        "UpperTorso",
+        "Torso"
+    },
+    Settings.Aim.FlashlightTargetPart,
+    function(Value)
+        Settings.Aim.FlashlightTargetPart = Value
+    end
+)
+
+--final-integration
+
+--initial-state
+
+VisualPage.Visible = true
+MainPage.Visible = false
+ParryPage.Visible = false
+AimPage.Visible = false
+
+--page-reset
+
+VisualPage.CanvasPosition = Vector2.zero
+MainPage.CanvasPosition = Vector2.zero
+ParryPage.CanvasPosition = Vector2.zero
+AimPage.CanvasPosition = Vector2.zero
+
+--menu-state
+
+MainFrame.Visible = true
+ScreenGui.Enabled = true
+Minimized = false
+
+Sidebar.Visible = true
+Content.Visible = true
+
+MainFrame.Size = UDim2.fromOffset(720, 470)
+MinimizeButton.Text = "—"
+
+--tab-refresh
+
+local function RefreshTabs()
+    local ActivePage
+
+    for Name, Page in pairs(Pages) do
+        if Page.Visible then
+            ActivePage = Name
+            break
+        end
+    end
+
+    if not ActivePage then
+        ActivePage = "VISUAL"
+        SelectPage(ActivePage)
+    end
+
+    for Name, Button in pairs(TabButtons) do
+        if Name == ActivePage then
+            Button.BackgroundColor3 =
+                Color3.fromRGB(55, 75, 105)
+
+            Button.TextColor3 =
+                Color3.fromRGB(245, 245, 250)
+        else
+            Button.BackgroundColor3 =
+                Color3.fromRGB(30, 30, 37)
+
+            Button.TextColor3 =
+                Color3.fromRGB(175, 175, 185)
+        end
+    end
+end
+
+RefreshTabs()
+
+--close-popups
+
+local function CloseAllPopups()
+    CloseDropdown()
+    CloseColorPicker()
+end
+
+--minimize-popup-cleanup
+
+MinimizeButton.MouseButton1Click:Connect(function()
+    if Minimized then
+        CloseAllPopups()
+    end
+end)
+
+--tab-popup-cleanup
+
+for Name, Button in pairs(TabButtons) do
+    Button.MouseButton1Click:Connect(function()
+        CloseAllPopups()
+
+        task.defer(function()
+            SelectPage(Name)
+        end)
+    end)
+end
+
+--focus-protection
+
+MainFrame:GetPropertyChangedSignal("Visible"):Connect(function()
+    if ScreenGui.Parent then
+        MainFrame.Visible = true
+    end
+end)
+
+--screen-protection
+
+ScreenGui:GetPropertyChangedSignal("Parent"):Connect(function()
+    if ScreenGui.Parent == nil then
+        return
+    end
+
+    ProtectMenu()
+end)
+
+--safe-drag-release
+
+UserInputService.WindowFocusReleased:Connect(function()
+    if Dragging then
+        EndDrag()
+    end
+end)
+
+--final-ready
+
+task.defer(function()
+    ProtectMenu()
+    RefreshTabs()
+
+    VisualPage.CanvasPosition = Vector2.zero
+end)
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerESPFolder = nil
+local PlayerESPConnections = {}
+local PlayerESPRunning = false
+
+local function GetPlayerESPFolder()
+    if PlayerESPFolder and PlayerESPFolder.Parent then
+        return PlayerESPFolder
+    end
+
+    PlayerESPFolder = Instance.new("Folder")
+    PlayerESPFolder.Name = "LocalPlayerESP"
+    PlayerESPFolder.Parent = workspace
+
+    return PlayerESPFolder
+end
+
+local function GetPlayerRole(Player)
+    if not Player then
+        return "Survivor"
+    end
+
+    local Team = Player.Team
+    local TeamName = Team and Team.Name
+
+    if TeamName then
+        TeamName = string.lower(TeamName)
+
+        if string.find(TeamName, "killer") then
+            return "Killer"
+        end
+
+        if string.find(TeamName, "spect") then
+            return "Spectator"
+        end
+
+        if string.find(TeamName, "survivor") then
+            return "Survivor"
+        end
+    end
+
+    return "Survivor"
+end
+
+local function IsRoleEnabled(Role)
+    local Visual = Settings.Visual
+    local Types = Visual.PlayerESPTypes
+
+    if not Types then
+        return true
+    end
+
+    if Role == "Killer" then
+        return Types.Killer == true
+    end
+
+    if Role == "Spectator" then
+        return Types.Spectator == true
+    end
+
+    return Types.Survivor == true
+end
+
+local function GetRoleColor(Role)
+    local Visual = Settings.Visual
+
+    if Role == "Killer" then
+        return Visual.KillerColor or Color3.fromRGB(255, 0, 0)
+    end
+
+    if Role == "Spectator" then
+        return Visual.SpectatorColor or Color3.fromRGB(255, 255, 255)
+    end
+
+    return Visual.SurvivorColor or Color3.fromRGB(0, 255, 0)
+end
+
+local function IsValidCharacter(Character)
+    if not Character then
+        return false
+    end
+
+    if not Character.Parent then
+        return false
+    end
+
+    local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+
+    return Humanoid ~= nil
+end
+
+local function GetPlayerKey(Player)
+    if not Player then
+        return "Unknown"
+    end
+
+    return tostring(Player.UserId)
+end
+
+local function GetHighlightName(Player)
+    return "Player_" .. GetPlayerKey(Player)
+end
+
+local function RemovePlayerESP(Player)
+    if not PlayerESPFolder or not Player then
+        return
+    end
+
+    local Highlight = PlayerESPFolder:FindFirstChild(
+        GetHighlightName(Player)
+    )
+
+    if Highlight then
+        Highlight:Destroy()
+    end
+end
+
+local function RemoveAllPlayerESP()
+    if not PlayerESPFolder then
+        return
+    end
+
+    for _, Object in ipairs(PlayerESPFolder:GetChildren()) do
+        Object:Destroy()
+    end
+end
+
+local function CreatePlayerHighlight(Player)
+    if not Player or Player == LocalPlayer then
+        return
+    end
+
+    if not Settings.Visual.EnablePlayerESP then
+        RemovePlayerESP(Player)
+        return
+    end
+
+    local Character = Player.Character
+
+    if not IsValidCharacter(Character) then
+        RemovePlayerESP(Player)
+        return
+    end
+
+    local Role = GetPlayerRole(Player)
+
+    if not IsRoleEnabled(Role) then
+        RemovePlayerESP(Player)
+        return
+    end
+
+    local Folder = GetPlayerESPFolder()
+    local Name = GetHighlightName(Player)
+    local Highlight = Folder:FindFirstChild(Name)
+
+    if not Highlight then
+        Highlight = Instance.new("Highlight")
+        Highlight.Name = Name
+        Highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        Highlight.Parent = Folder
+    end
+
+    local Color = GetRoleColor(Role)
+
+    Highlight.Adornee = Character
+    Highlight.FillColor = Color
+    Highlight.OutlineColor = Color
+    Highlight.FillTransparency =
+        Settings.Visual.ESPFillTransparency or 0.95
+    Highlight.OutlineTransparency =
+        Settings.Visual.ESPOutlineTransparency or 0.3
+    Highlight.Enabled = true
+end
+
+local function RefreshPlayerESP()
+    if not Settings.Visual.EnablePlayerESP then
+        RemoveAllPlayerESP()
+        return
+    end
+
+    for _, Player in ipairs(Players:GetPlayers()) do
+        if Player ~= LocalPlayer then
+            pcall(CreatePlayerHighlight, Player)
+        end
+    end
+end
+
+local function WatchPlayer(Player)
+    if Player == LocalPlayer then
+        return
+    end
+
+    if PlayerESPConnections[Player] then
+        for _, Connection in ipairs(PlayerESPConnections[Player]) do
+            pcall(function()
+                Connection:Disconnect()
+            end)
+        end
+    end
+
+    PlayerESPConnections[Player] = {}
+
+    table.insert(
+        PlayerESPConnections[Player],
+        Player.CharacterAdded:Connect(function()
+            RemovePlayerESP(Player)
+
+            task.delay(0.15, function()
+                if Settings.Visual.EnablePlayerESP then
+                    pcall(CreatePlayerHighlight, Player)
+                end
+            end)
+        end)
+    )
+
+    table.insert(
+        PlayerESPConnections[Player],
+        Player.CharacterRemoving:Connect(function()
+            RemovePlayerESP(Player)
+        end)
+    )
+
+    table.insert(
+        PlayerESPConnections[Player],
+        Player:GetPropertyChangedSignal("Team"):Connect(function()
+            RemovePlayerESP(Player)
+
+            if Settings.Visual.EnablePlayerESP then
+                pcall(CreatePlayerHighlight, Player)
+            end
+        end)
+    )
+end
+
+local function UnwatchPlayer(Player)
+    RemovePlayerESP(Player)
+
+    local Connections = PlayerESPConnections[Player]
+
+    if Connections then
+        for _, Connection in ipairs(Connections) do
+            pcall(function()
+                Connection:Disconnect()
+            end)
+        end
+    end
+
+    PlayerESPConnections[Player] = nil
+end
+
+for _, Player in ipairs(Players:GetPlayers()) do
+    WatchPlayer(Player)
+end
+
+Players.PlayerAdded:Connect(function(Player)
+    WatchPlayer(Player)
+
+    if Settings.Visual.EnablePlayerESP then
+        task.delay(0.15, function()
+            pcall(CreatePlayerHighlight, Player)
+        end)
+    end
+end)
+
+Players.PlayerRemoving:Connect(function(Player)
+    UnwatchPlayer(Player)
+end)
+
+task.spawn(function()
+    local LastEnabled = nil
+    local LastSurvivor = nil
+    local LastKiller = nil
+    local LastSpectator = nil
+    local LastFill = nil
+    local LastOutline = nil
+
+    while true do
+        local Visual = Settings.Visual
+
+        local Enabled = Visual.EnablePlayerESP == true
+        local Types = Visual.PlayerESPTypes or {}
+
+        local Survivor = Types.Survivor == true
+        local Killer = Types.Killer == true
+        local Spectator = Types.Spectator == true
+
+        local Fill = Visual.ESPFillTransparency
+        local Outline = Visual.ESPOutlineTransparency
+
+        local Changed =
+            Enabled ~= LastEnabled
+            or Survivor ~= LastSurvivor
+            or Killer ~= LastKiller
+            or Spectator ~= LastSpectator
+            or Fill ~= LastFill
+            or Outline ~= LastOutline
+
+        if Changed then
+            LastEnabled = Enabled
+            LastSurvivor = Survivor
+            LastKiller = Killer
+            LastSpectator = Spectator
+            LastFill = Fill
+            LastOutline = Outline
+
+            if Enabled then
+                RefreshPlayerESP()
+            else
+                RemoveAllPlayerESP()
+            end
+        elseif Enabled then
+            RefreshPlayerESP()
+        end
+
+        task.wait(0.25)
+    end
+end)
+
+task.spawn(function()
+    local LastSurvivor = nil
+    local LastKiller = nil
+    local LastSpectator = nil
+
+    while true do
+        local Visual = Settings.Visual
+        local Types = Visual.PlayerESPTypes or {}
+
+        local Survivor = Types.Survivor == true
+        local Killer = Types.Killer == true
+        local Spectator = Types.Spectator == true
+
+        if Survivor ~= LastSurvivor
+        or Killer ~= LastKiller
+        or Spectator ~= LastSpectator then
+            LastSurvivor = Survivor
+            LastKiller = Killer
+            LastSpectator = Spectator
+
+            if Visual.EnablePlayerESP then
+                RefreshPlayerESP()
+            end
+        end
+
+        task.wait(0.1)
+    end
+end)
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local SurvivorItemNames = {
+    ["Motion Tracker"] = true,
+    ["Gate"] = true,
+    ["Flashlight"] = true,
+    ["Bandage"] = true,
+    ["Parrying Dagger"] = true,
+    ["Adrenaline Shot"] = true,
+    ["Twist of Fate"] = true,
+    ["Shadow Clone"] = true,
+    ["Holy Water"] = true,
+    ["WaxBound Candle"] = true,
+    ["Riot Shield"] = true,
+    ["Emperor"] = true,
+    ["AWP"] = true
+}
+
+local function GetSurvivorItem(Player)
+    local Character = Player.Character
+
+    if not Character then
+        return nil
+    end
+
+    for _, Object in ipairs(Character:GetDescendants()) do
+        if Object:IsA("Tool")
+        or Object:IsA("Accessory")
+        or Object:IsA("Model") then
+            if SurvivorItemNames[Object.Name] then
+                return Object.Name
+            end
+        end
+    end
+
+    return nil
+end
+
+local function GetItemImageId(ItemName)
+    local ItemsFolder = ReplicatedStorage:FindFirstChild("Items")
+
+    if not ItemsFolder then
+        return nil
+    end
+
+    local ItemObject = ItemsFolder:FindFirstChild(ItemName)
+
+    if not ItemObject then
+        return nil
+    end
+
+    if ItemObject:IsA("Decal")
+    or ItemObject:IsA("Texture") then
+        return ItemObject.Texture
+    end
+
+    local Texture =
+        ItemObject:FindFirstChildWhichIsA("Decal", true)
+        or ItemObject:FindFirstChildWhichIsA("Texture", true)
+
+    if Texture then
+        return Texture.Texture
+    end
+
+    local NamedTexture =
+        ItemObject:FindFirstChild("Texture", true)
+
+    if NamedTexture
+    and (NamedTexture:IsA("Decal")
+    or NamedTexture:IsA("Texture")) then
+        return NamedTexture.Texture
+    end
+
+    return nil
+end
+
+local function RemoveSurvivorItemESP(Player)
+    if not Player then
+        return
+    end
+
+    local Folder = PlayerESPFolder
+
+    if not Folder then
+        return
+    end
+
+    local Name = "PlayerItem_" .. GetPlayerKey(Player)
+    local Icon = Folder:FindFirstChild(Name)
+
+    if Icon then
+        Icon:Destroy()
+    end
+end
+
+local function UpdateSurvivorItemESP(Player)
+    if not Player or Player == LocalPlayer then
+        return
+    end
+
+    local Types = Settings.Visual.PlayerESPTypes or {}
+
+    if not Types.SurvivorItems then
+        RemoveSurvivorItemESP(Player)
+        return
+    end
+
+    if GetPlayerRole(Player) ~= "Survivor" then
+        RemoveSurvivorItemESP(Player)
+        return
+    end
+
+    local Character = Player.Character
+
+    if not IsValidCharacter(Character) then
+        RemoveSurvivorItemESP(Player)
+        return
+    end
+
+    local Torso =
+        Character:FindFirstChild("HumanoidRootPart")
+        or Character:FindFirstChild("UpperTorso")
+        or Character:FindFirstChild("Torso")
+
+    if not Torso or not Torso:IsA("BasePart") then
+        RemoveSurvivorItemESP(Player)
+        return
+    end
+
+    local ItemName = GetSurvivorItem(Player)
+
+    if not ItemName then
+        RemoveSurvivorItemESP(Player)
+        return
+    end
+
+    local ImageId = GetItemImageId(ItemName)
+
+    if not ImageId then
+        RemoveSurvivorItemESP(Player)
+        return
+    end
+
+    local Folder = GetPlayerESPFolder()
+    local Name = "PlayerItem_" .. GetPlayerKey(Player)
+    local Icon = Folder:FindFirstChild(Name)
+
+    if not Icon then
+        Icon = Instance.new("BillboardGui")
+        Icon.Name = Name
+        Icon.AlwaysOnTop = true
+        Icon.LightInfluence = 0
+        Icon.MaxDistance = 0
+        Icon.Size = UDim2.fromOffset(20, 20)
+        Icon.StudsOffset = Vector3.new(0, 0, -1.6)
+        Icon.Parent = Folder
+
+        local Image = Instance.new("ImageLabel")
+        Image.Name = "ImageLabel"
+        Image.BackgroundTransparency = 1
+        Image.Size = UDim2.fromScale(1, 1)
+        Image.Parent = Icon
+    end
+
+    Icon.Adornee = Torso
+    Icon.Enabled = true
+
+    local Image = Icon:FindFirstChild("ImageLabel")
+
+    if Image then
+        Image.Image = ImageId
+    end
+end
+
+task.spawn(function()
+    local LastState = nil
+
+    while true do
+        local Types = Settings.Visual.PlayerESPTypes or {}
+        local Enabled = Types.SurvivorItems == true
+
+        if Enabled ~= LastState then
+            LastState = Enabled
+
+            for _, Player in ipairs(Players:GetPlayers()) do
+                if Player ~= LocalPlayer then
+                    UpdateSurvivorItemESP(Player)
+                end
+            end
+        elseif Enabled and Settings.Visual.EnablePlayerESP then
+            for _, Player in ipairs(Players:GetPlayers()) do
+                if Player ~= LocalPlayer then
+                    UpdateSurvivorItemESP(Player)
+                end
+            end
+        end
+
+        task.wait(0.25)
+    end
+end)
+
+local function RemovePlayerNametag(Player)
+    if not PlayerESPFolder or not Player then
+        return
+    end
+
+    local Name = "PlayerTag_" .. GetPlayerKey(Player)
+    local Tag = PlayerESPFolder:FindFirstChild(Name)
+
+    if Tag then
+        Tag:Destroy()
+    end
+end
+
+local function UpdatePlayerNametag(Player)
+    if not Player or Player == LocalPlayer then
+        return
+    end
+
+    local Types = Settings.Visual.PlayerESPTypes or {}
+
+    if not Types.Nametags then
+        RemovePlayerNametag(Player)
+        return
+    end
+
+    if not Settings.Visual.EnablePlayerESP then
+        RemovePlayerNametag(Player)
+        return
+    end
+
+    local Character = Player.Character
+
+    if not IsValidCharacter(Character) then
+        RemovePlayerNametag(Player)
+        return
+    end
+
+    local Head = Character:FindFirstChild("Head")
+
+    if not Head or not Head:IsA("BasePart") then
+        RemovePlayerNametag(Player)
+        return
+    end
+
+    local Role = GetPlayerRole(Player)
+
+    if not IsRoleEnabled(Role) then
+        RemovePlayerNametag(Player)
+        return
+    end
+
+    local Folder = GetPlayerESPFolder()
+    local Name = "PlayerTag_" .. GetPlayerKey(Player)
+    local Tag = Folder:FindFirstChild(Name)
+
+    if not Tag then
+        Tag = Instance.new("BillboardGui")
+        Tag.Name = Name
+        Tag.AlwaysOnTop = true
+        Tag.LightInfluence = 0
+        Tag.MaxDistance = 0
+        Tag.Size = UDim2.new(0, 220, 0, 20)
+        Tag.StudsOffset = Vector3.new(0, 2.65, 0)
+        Tag.Parent = Folder
+    end
+
+    local Label = Tag:FindFirstChild("NameLabel")
+
+    if not Label then
+        Label = Instance.new("TextLabel")
+        Label.Name = "NameLabel"
+        Label.BackgroundTransparency = 1
+        Label.BorderSizePixel = 0
+        Label.Size = UDim2.fromScale(1, 1)
+        Label.Font = Enum.Font.Gotham
+        Label.TextStrokeTransparency = 0.65
+        Label.TextStrokeColor3 = Color3.new(0, 0, 0)
+        Label.Parent = Tag
+    end
+
+    Label.TextSize = Settings.Visual.ESPTextSize or 12
+    Label.TextColor3 = GetRoleColor(Role)
+    Label.Text = Player.Name
+
+    Tag.Adornee = Head
+    Tag.Enabled = true
+end
+
+local function RefreshAllPlayerNametags()
+    if not Settings.Visual.EnablePlayerESP then
+        for _, Player in ipairs(Players:GetPlayers()) do
+            RemovePlayerNametag(Player)
+        end
+        return
+    end
+
+    for _, Player in ipairs(Players:GetPlayers()) do
+        if Player ~= LocalPlayer then
+            UpdatePlayerNametag(Player)
+        end
+    end
+end
+
+task.spawn(function()
+    local LastEnabled = nil
+
+    while true do
+        local Types = Settings.Visual.PlayerESPTypes or {}
+        local Enabled =
+            Settings.Visual.EnablePlayerESP == true
+            and Types.Nametags == true
+
+        if Enabled ~= LastEnabled then
+            LastEnabled = Enabled
+            RefreshAllPlayerNametags()
+        elseif Enabled then
+            RefreshAllPlayerNametags()
+        end
+
+        task.wait(0.25)
+    end
+end)
+
+local function UpdatePlayerDistanceESP(Player)
+    if not Player or Player == LocalPlayer then
+        return
+    end
+
+    local Types = Settings.Visual.PlayerESPTypes or {}
+
+    if not Types.DistanceESP then
+        return
+    end
+
+    if not Settings.Visual.EnablePlayerESP then
+        return
+    end
+
+    local Character = Player.Character
+
+    if not IsValidCharacter(Character) then
+        return
+    end
+
+    local MyCharacter = LocalPlayer.Character
+
+    if not MyCharacter then
+        return
+    end
+
+    local MyRoot = MyCharacter:FindFirstChild("HumanoidRootPart")
+    local TargetRoot = Character:FindFirstChild("HumanoidRootPart")
+
+    if not MyRoot or not TargetRoot then
+        return
+    end
+
+    local Distance = math.floor(
+        (MyRoot.Position - TargetRoot.Position).Magnitude
+    )
+
+    local NameTag = PlayerESPFolder
+        and PlayerESPFolder:FindFirstChild(
+            "PlayerTag_" .. GetPlayerKey(Player)
+        )
+
+    if not NameTag then
+        UpdatePlayerNametag(Player)
+        NameTag = PlayerESPFolder
+            and PlayerESPFolder:FindFirstChild(
+                "PlayerTag_" .. GetPlayerKey(Player)
+            )
+    end
+
+    if not NameTag then
+        return
+    end
+
+    local Label = NameTag:FindFirstChild("NameLabel")
+
+    if not Label then
+        return
+    end
+
+    local ShowName = Types.Nametags == true
+
+    if ShowName then
+        Label.Text = Player.Name .. " [" .. Distance .. "m]"
+    else
+        Label.Text = "[" .. Distance .. "m]"
+    end
+
+    Label.TextSize = Settings.Visual.ESPTextSize or 12
+end
+
+task.spawn(function()
+    while true do
+        local Types = Settings.Visual.PlayerESPTypes or {}
+
+        if Settings.Visual.EnablePlayerESP
+        and Types.DistanceESP then
+            for _, Player in ipairs(Players:GetPlayers()) do
+                if Player ~= LocalPlayer then
+                    UpdatePlayerDistanceESP(Player)
+                end
+            end
+        end
+
+        task.wait(0.1)
+    end
+end)
+
+local KillerWarningYellow = "rbxassetid://120753562298647"
+local KillerWarningRed = "rbxassetid://99499680507460"
+
+local KillerWarningObjects = {}
+
+local function ClearKillerWarning(Player)
+    local Warning = KillerWarningObjects[Player]
+
+    if Warning then
+        Warning:Destroy()
+        KillerWarningObjects[Player] = nil
+    end
+end
+
+local function CreateKillerWarning(Player)
+    if not Player or Player == LocalPlayer then
+        return
+    end
+
+    local Character = Player.Character
+    if not Character then
+        return
+    end
+
+    local Root = Character:FindFirstChild("HumanoidRootPart")
+    local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+
+    if not Root or not Humanoid or Humanoid.Health <= 0 then
+        return
+    end
+
+    local Warning = KillerWarningObjects[Player]
+
+    if Warning and Warning.Parent ~= Root then
+        Warning:Destroy()
+        Warning = nil
+        KillerWarningObjects[Player] = nil
+    end
+
+    if not Warning then
+        Warning = Instance.new("BillboardGui")
+        Warning.Name = "LocalKillerWarning"
+        Warning.Adornee = Root
+        Warning.AlwaysOnTop = true
+        Warning.LightInfluence = 0
+        Warning.MaxDistance = 2000
+        Warning.Parent = Root
+
+        local Yellow = Instance.new("ImageLabel")
+        Yellow.Name = "YellowWarning"
+        Yellow.BackgroundTransparency = 1
+        Yellow.Image = KillerWarningYellow
+        Yellow.Size = UDim2.fromScale(1, 1)
+        Yellow.Position = UDim2.fromScale(0, 0)
+        Yellow.Parent = Warning
+
+        local Red = Instance.new("ImageLabel")
+        Red.Name = "RedWarning"
+        Red.BackgroundTransparency = 1
+        Red.Image = KillerWarningRed
+        Red.Size = UDim2.fromScale(0.62, 1)
+        Red.Position = UDim2.fromScale(0.38, 0)
+        Red.Visible = false
+        Red.Parent = Warning
+
+        KillerWarningObjects[Player] = Warning
+    end
+
+    return Warning
+end
+
+local function UpdateKillerWarning(Player, Distance)
+    local Warning = CreateKillerWarning(Player)
+
+    if not Warning then
+        return
+    end
+
+    local Yellow = Warning:FindFirstChild("YellowWarning")
+    local Red = Warning:FindFirstChild("RedWarning")
+
+    local Danger = Distance <= 40
+
+    if Danger then
+        Warning.Size = UDim2.fromOffset(76, 56)
+
+        if Yellow then
+            Yellow.Size = UDim2.fromScale(0.62, 1)
+            Yellow.Position = UDim2.fromScale(0, 0)
+            Yellow.Visible = true
+        end
+
+        if Red then
+            Red.Size = UDim2.fromScale(0.62, 1)
+            Red.Position = UDim2.fromScale(0.38, 0)
+            Red.Visible = true
+        end
+    else
+        Warning.Size = UDim2.fromOffset(56, 56)
+
+        if Yellow then
+            Yellow.Size = UDim2.fromScale(1, 1)
+            Yellow.Position = UDim2.fromScale(0, 0)
+            Yellow.Visible = true
+        end
+
+        if Red then
+            Red.Visible = false
+        end
+    end
+end
+
+local function GetNearestKillerDistance(Player)
+    local Character = Player.Character
+
+    if not Character then
+        return math.huge
+    end
+
+    local Root = Character:FindFirstChild("HumanoidRootPart")
+    local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+
+    if not Root or not Humanoid or Humanoid.Health <= 0 then
+        return math.huge
+    end
+
+    local Nearest = math.huge
+
+    for _, Killer in ipairs(Players:GetPlayers()) do
+        if Killer ~= LocalPlayer then
+            local KillerCharacter = Killer.Character
+
+            if KillerCharacter and GetPlayerRole(Killer) == "Killer" then
+                local KillerRoot =
+                    KillerCharacter:FindFirstChild("HumanoidRootPart")
+
+                local KillerHumanoid =
+                    KillerCharacter:FindFirstChildOfClass("Humanoid")
+
+                if KillerRoot
+                and KillerHumanoid
+                and KillerHumanoid.Health > 0 then
+                    local Distance =
+                        (Root.Position - KillerRoot.Position).Magnitude
+
+                    if Distance < Nearest then
+                        Nearest = Distance
+                    end
+                end
+            end
+        end
+    end
+
+    return Nearest
+end
+
+task.spawn(function()
+    while true do
+        local Enabled = Settings.Visual.SurvivorKillerWarning == true
+
+        if Enabled then
+            for _, Player in ipairs(Players:GetPlayers()) do
+                if Player ~= LocalPlayer
+                and GetPlayerRole(Player) == "Survivor" then
+                    local Distance = GetNearestKillerDistance(Player)
+
+                    if Distance <= 60 then
+                        UpdateKillerWarning(Player, Distance)
+                    else
+                        ClearKillerWarning(Player)
+                    end
+                else
+                    ClearKillerWarning(Player)
+                end
+            end
+        else
+            for Player in pairs(KillerWarningObjects) do
+                ClearKillerWarning(Player)
+            end
+        end
+
+        task.wait(0.15)
+    end
+end)
+
+Players.PlayerRemoving:Connect(function(Player)
+    ClearKillerWarning(Player)
+end)
